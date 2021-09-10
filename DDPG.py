@@ -110,7 +110,7 @@ class DDPG():
         action_gradients = np.reshape(self.critic_local.get_action_gradients(
             [states, actions, 0]), (-1, self.action_size))
         # custom training function
-        self.actor_local.train_fn([states, action_gradients, 1])
+        self.actor_local.train_fn(states, action_gradients)
 
         # Soft-update target models
         self.soft_update(self.critic_local.model,
