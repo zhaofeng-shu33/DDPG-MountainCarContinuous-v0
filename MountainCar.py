@@ -53,7 +53,7 @@ class MountainCar():
                 matrix_Q[i][j] = np.max(Q_list)
                 matrix_sQ[i][j] = np.std(Q_list)
                 matrix_mQ[i][j] = action_range[np.argmax(Q_list)]
-                matrix_A[i][j] = self.agent.actor_local.model.predict(state)
+                matrix_A[i][j] = self.agent.actor_local.model.forward(state)
         extent = [plot_range[0], plot_range[-1], plot_range[0], plot_range[-1]]
 
         fig, ax = plt.subplots(2, 2, sharex=True)

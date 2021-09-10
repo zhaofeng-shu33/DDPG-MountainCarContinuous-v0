@@ -3,7 +3,7 @@ from Critic import Critic
 from ReplayBuffer import ReplayBuffer
 from OUNoise import OUNoise
 import numpy as np
-
+import torch
 
 class DDPG():
     """Reinforcement Learning agent that learns using DDPG."""
@@ -30,8 +30,8 @@ class DDPG():
         # Initialize target model parameters with local model parameters
         self.critic_target.model.set_weights(
             self.critic_local.model.get_weights())
-        self.actor_target.model.set_weights(
-            self.actor_local.model.get_weights())
+        self.actor_target.model.load_state_dict(
+            self.actor_local.model.state_dict())
 
         # Noise process
         self.exploration_mu = 0
@@ -69,7 +69,7 @@ class DDPG():
     def act(self, state):
         """Returns actions for given state(s) as per current policy."""
         state = np.reshape(state, [-1, self.state_size])
-        pure_action = self.actor_local.model.predict(state)[0]
+        pure_action = self.actor_local.model.forward(state)[0].item()
         noise = self.noise.sample()
         action = np.clip(pure_action*.2 + noise, -1, 1)
         # add some noise for exploration
@@ -115,7 +115,7 @@ class DDPG():
         # Soft-update target models
         self.soft_update(self.critic_local.model,
                          self.critic_target.model, self.tau_critic)
-        self.soft_update(self.actor_local.model,
+        self.soft_update_torch(self.actor_local.model,
                          self.actor_target.model, self.tau_actor)
 
     def soft_update(self, local_model, target_model, tau):
@@ -129,3 +129,12 @@ class DDPG():
 
         new_weights = tau * local_weights + (1 - tau) * target_weights
         target_model.set_weights(new_weights)
+
+    def soft_update_torch(self, local_model, target_model, tau):
+        """Soft update model parameters."""
+        with torch.no_grad():
+            for p, p_targ in zip(local_model.parameters(), target_model.parameters()):
+                # NB: We use an in-place operations "mul_", "add_" to update target
+                # params, as opposed to "mul" and "add", which would make new tensors.
+                p_targ.data.mul_(1 - tau)
+                p_targ.data.add_(tau * p.data)
