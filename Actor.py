@@ -47,9 +47,9 @@ class Actor:
         # final output layer
         # actions = layers.Dense(units=self.action_size, activation='tanh',
         #                        name='raw_actions')(net)
-        self.model = nn.Sequential(nn.Linear(self.state_size, 40), nn.ReLU(),
-                                   nn.Linear(40, 20), nn.ReLU(),
-                                   nn.Linear(20, self.action_size), nn.Tanh())
+        self.model = nn.Sequential(nn.Linear(self.state_size, 40, dtype=torch.float64), nn.ReLU(),
+                                   nn.Linear(40, 20, dtype=torch.float64), nn.ReLU(),
+                                   nn.Linear(20, self.action_size, dtype=torch.float64), nn.Tanh())
         # Create Keras model
         # self.model = models.Model(inputs=states, outputs=actions)
 
@@ -59,8 +59,8 @@ class Actor:
         
         # Define optimizer and training function
         # optimizer = optimizers.Adam(lr=0.0001)
-        self.optimizer = torch.optim.Adam(self.model.Parameters(), lr=0.0001)
-        # updates_op = optimizer.get_updates(
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.0001)
+        # updates_op = optimizer.get_updates(m1
         #     params=self.model.trainable_weights, loss=loss)
     def train_fn(self, states, action_gradients):
         # action_gradients should not contain any gradient infomation
