@@ -111,7 +111,7 @@ class DDPG():
         # Train actor model (local)
         actions_tensor = self.actor_local.model(torch.from_numpy(states))
         self.critic_local.update_actor_parameters(
-            states, actions_tensor)
+            states, actions_tensor, self.actor_local.optimizer)
 
         # Soft-update target models
         self.soft_update_torch(self.critic_local.model,

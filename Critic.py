@@ -61,15 +61,15 @@ class Critic:
 
         # Define optimizer and compile model for training with
         # built-in loss function
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.05)
         self.loss = nn.MSELoss()
 
-    def update_actor_parameters(self, states, actions_tensor):
+    def update_actor_parameters(self, states, actions_tensor, act_optimizer):
         q_values = self.model.forward(torch.from_numpy(states), actions_tensor)
         loss = -1.0 * torch.mean(q_values)
-        self.optimizer.zero_grad()
+        act_optimizer.zero_grad()
         loss.backward()
-        self.optimizer.step()
+        act_optimizer.step()
 
     def train_on_batch(self, x, y):
         states = torch.from_numpy(x[0])

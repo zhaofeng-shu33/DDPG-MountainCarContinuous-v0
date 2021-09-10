@@ -194,7 +194,7 @@ class MountainCar():
         if verbose == 1:
             pstr = ('Epoch:{:4}\nTrain: reward:{: 6.1f} steps:{:6.0f} hist:'
                     '{: 6.1f} action/std:{: .3f}/{: .3f} \nTest:  reward:'
-                    '{: 6.1f} steps:{:6.0f} hist:{: 6.1f} action/std:{: .3f}'
+                    '{: 6.3f} steps:{:6.0f} hist:{: 6.1f} action/std:{: .3f}'
                     '/{: .3f}\n'.format(*vals))
         elif verbose == 0:
             pstr = ('Epoch {:4} train reward:{: 6.1f} test reward:{: 6.1f}'
