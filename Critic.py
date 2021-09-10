@@ -1,5 +1,3 @@
-from keras import layers, models, optimizers
-from keras import backend as K
 from torch import nn
 import torch
 
@@ -11,7 +9,7 @@ class CriticModel(nn.Module):
         self.net_1 = nn.Sequential(nn.Linear(state_size, 20, dtype=torch.float64), nn.ReLU())
         # net = layers.Add()([net, actions])
         # net = layers.Dense(units=20, activation='relu')(net)
-        self.net_2 = nn.Sequential(nn.Linear(20 + action_size, 20, dtype=torch.float64), nn.ReLU())
+        self.net_2 = nn.Sequential(nn.Linear(20, 20, dtype=torch.float64), nn.ReLU())
 
         # lin_states = layers.Dense(units=20, activation='relu')(states)
         self.lin_states = nn.Sequential(nn.Linear(state_size, 20, dtype=torch.float64), nn.ReLU())
@@ -19,14 +17,14 @@ class CriticModel(nn.Module):
 
         # Add final output layer to produce action values (Q values)
         # Q_values = layers.Dense(units=1,name='q_values')(net)
-        self.Q_values = nn.Linear(40, 1, dtype=torch.float64)
+        self.Q_values = nn.Linear(20, 1, dtype=torch.float64)
 
     def forward(self, states, actions):
         net = self.net_1.forward(states)
-        net = torch.cat((net, actions), 1)
+        net = net + actions # merge layer
         net = self.net_2(net)
-        _lin_states = self.lin_states(actions)
-        net = torch.cat((net, _lin_states))
+        _lin_states = self.lin_states(states)
+        net = net + _lin_states
         return self.Q_values(net)
 
 class Critic:
@@ -54,8 +52,8 @@ class Critic:
         (state, action) pairs -> Q-values.
         """
         # Define input layers
-        states = layers.Input(shape=(self.state_size,), name='states')
-        actions = layers.Input(shape=(self.action_size,), name='actions')
+        # states = layers.Input(shape=(self.state_size,), name='states')
+        # actions = layers.Input(shape=(self.action_size,), name='actions')
 
 
         # Create Keras model
@@ -63,16 +61,22 @@ class Critic:
 
         # Define optimizer and compile model for training with
         # built-in loss function
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.05)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
+        self.loss = nn.MSELoss()
 
-    def get_action_gradients(self, states, actions):
-        self.model.compile(optimizer=optimizer, loss='mse')
+    def update_actor_parameters(self, states, actions_tensor):
+        q_values = self.model.forward(torch.from_numpy(states), actions_tensor)
+        loss = -1.0 * torch.mean(q_values)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
-        # Compute action gradients (derivative of Q values w.r.t. to actions)
-        action_gradients = K.gradients(Q_values, actions)
-
-        # Define an additional function to fetch action gradients (to be
-        # used by actor model)
-        self.get_action_gradients = K.function(
-            inputs=[*self.model.input, K.learning_phase()],
-            outputs=action_gradients)
+    def train_on_batch(self, x, y):
+        states = torch.from_numpy(x[0])
+        actions = torch.from_numpy(x[1])
+        q_target = torch.from_numpy(y)
+        q_values = self.model.forward(states, actions)
+        loss_val = self.loss(q_values, q_target) # y is q_target
+        self.optimizer.zero_grad()
+        loss_val.backward()
+        self.optimizer.step()

@@ -62,6 +62,7 @@ class Actor:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.0001)
         # updates_op = optimizer.get_updates(m1
         #     params=self.model.trainable_weights, loss=loss)
+
     def train_fn(self, states, action_gradients):
         # action_gradients should not contain any gradient infomation
         actions = self.model(torch.from_numpy(states))

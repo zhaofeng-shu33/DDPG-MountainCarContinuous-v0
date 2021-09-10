@@ -28,8 +28,8 @@ class DDPG():
         self.critic_target = Critic(self.state_size, self.action_size)
 
         # Initialize target model parameters with local model parameters
-        self.critic_target.model.set_weights(
-            self.critic_local.model.get_weights())
+        self.critic_target.model.load_state_dict(
+            self.critic_local.model.state_dict())
         self.actor_target.model.load_state_dict(
             self.actor_local.model.state_dict())
 
@@ -99,22 +99,22 @@ class DDPG():
         # Q_targets_next = critic_target(next_state, actor_target(next_state))
         with torch.no_grad():
             actions_next = self.actor_target.model.forward(torch.from_numpy(next_states)).detach().numpy()
-        Q_targets_next = self.critic_target.model.predict_on_batch(
-            [next_states, actions_next])
+            Q_targets_next = self.critic_target.model.forward(
+                torch.from_numpy(next_states), torch.from_numpy(actions_next)).detach().numpy()
 
         # Compute Q targets for current states and train critic model (local)
         Q_targets = rewards + self.gamma * Q_targets_next * (1 - dones)
-        self.critic_local.model.train_on_batch(
+        self.critic_local.train_on_batch(
             x=[states, actions], y=Q_targets)
 
+
         # Train actor model (local)
-        action_gradients = np.reshape(self.critic_local.get_action_gradients(
-            [states, actions, 0]), (-1, self.action_size))
-        # custom training function
-        self.actor_local.train_fn(states, action_gradients)
+        actions_tensor = self.actor_local.model(torch.from_numpy(states))
+        self.critic_local.update_actor_parameters(
+            states, actions_tensor)
 
         # Soft-update target models
-        self.soft_update(self.critic_local.model,
+        self.soft_update_torch(self.critic_local.model,
                          self.critic_target.model, self.tau_critic)
         self.soft_update_torch(self.actor_local.model,
                          self.actor_target.model, self.tau_actor)
