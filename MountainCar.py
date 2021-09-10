@@ -162,7 +162,7 @@ class MountainCar():
             test_hist.append([test_reward, test_steps])
 
             # check if solved
-            # if the mean of last n_solved teste episodes are
+            # if the mean of last n_solved test episodes are
             # greater than r_solved, it is solved!
 
             if epoch > n_solved:
