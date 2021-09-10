@@ -69,11 +69,11 @@ class DDPG():
     def act(self, state):
         """Returns actions for given state(s) as per current policy."""
         state = np.reshape(state, [-1, self.state_size])
-        pure_action = self.actor_local.model.forward(state)[0].item()
+        pure_action = self.actor_local.model.forward(torch.from_numpy(state))[0].item()
         noise = self.noise.sample()
         action = np.clip(pure_action*.2 + noise, -1, 1)
         # add some noise for exploration
-        return list(action), pure_action
+        return list(action), [pure_action]
 
     def learn(self, experiences):
         """
@@ -97,7 +97,8 @@ class DDPG():
 
         # Get predicted next-state actions and Q values from target models
         # Q_targets_next = critic_target(next_state, actor_target(next_state))
-        actions_next = self.actor_target.model.predict_on_batch(next_states)
+        with torch.no_grad():
+            actions_next = self.actor_target.model.forward(torch.from_numpy(next_states)).detach().numpy()
         Q_targets_next = self.critic_target.model.predict_on_batch(
             [next_states, actions_next])
 
