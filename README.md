@@ -1,4 +1,13 @@
 ## Mountain Car Continuous problem 
+How to run using old package
+```
+module load tensorflow/1.15.0-cpu
+module load anaconda3/py3
+```
+python==3.6.8
+keras==2.2.4
+tensorflow==1.15.0
+gym==0.19.0
 
 ### DDPG solving Openai Gym
 
