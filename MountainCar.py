@@ -1,9 +1,11 @@
 import os
 from DDPG import DDPG
 import gym
+import custom_gym_env
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import torch
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # forces tensorflow to use CPU
 
@@ -16,14 +18,14 @@ class MountainCar():
 
     def new_env(self):
         gym.logger.set_level(40)  # to surpress warnings
-        return gym.make('MountainCarContinuous-v0').unwrapped
+        return gym.make('MountainCarContinuous-v1').unwrapped
 
     def preprocess_state(self, state):
         # mapping the state values to [-1,1]
-        s = np.array(state)
-        s[0] = ((state[0] + 1.2) / 1.8) * 2 - 1
-        s[1] = ((state[1] + 0.07) / 0.14) * 2 - 1
-        return s
+        # s = np.array(state)
+        # s[0] = ((state[0] + 1.2) / 1.8) * 2 - 1
+        # s[1] = ((state[1] + 0.07) / 0.14) * 2 - 1
+        return state
 
     def plot_Q(self):
         """
@@ -184,6 +186,8 @@ class MountainCar():
                           ' to {:3d}'.format(test_running, epoch -
                                              n_solved + 1, epoch))
                     solved = epoch
+                # save the actor model for prediction task
+                    torch.save(self.agent.actor_local.model, 'build/actor_local.pth')
                     break
 
         if plot_Q:
