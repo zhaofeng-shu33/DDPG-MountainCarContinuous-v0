@@ -34,7 +34,7 @@ Or
 
 ```
 > from MountainCar import MountainCar
-> Leaner = MountainCar()
+> Learner = MountainCar()
 > train_hist, test_hist, solved = Learner.run_model(max_epochs=20, n_solved = 1, verbose=1)
 
 ```

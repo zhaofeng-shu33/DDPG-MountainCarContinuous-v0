@@ -1,9 +1,11 @@
 import os
 from DDPG import DDPG
 import gym
+import custom_gym_env
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import torch
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # forces tensorflow to use CPU
 
@@ -16,14 +18,14 @@ class MountainCar():
 
     def new_env(self):
         gym.logger.set_level(40)  # to surpress warnings
-        return gym.make('MountainCarContinuous-v0').unwrapped
+        return gym.make('MountainCarContinuous-v1').unwrapped
 
     def preprocess_state(self, state):
         # mapping the state values to [-1,1]
-        s = np.array(state)
-        s[0] = ((state[0] + 1.2) / 1.8) * 2 - 1
-        s[1] = ((state[1] + 0.07) / 0.14) * 2 - 1
-        return s
+        # s = np.array(state)
+        # s[0] = ((state[0] + 1.2) / 1.8) * 2 - 1
+        # s[1] = ((state[1] + 0.07) / 0.14) * 2 - 1
+        return state
 
     def plot_Q(self):
         """
@@ -53,7 +55,7 @@ class MountainCar():
                 matrix_Q[i][j] = np.max(Q_list)
                 matrix_sQ[i][j] = np.std(Q_list)
                 matrix_mQ[i][j] = action_range[np.argmax(Q_list)]
-                matrix_A[i][j] = self.agent.actor_local.model.predict(state)
+                matrix_A[i][j] = self.agent.actor_local.model.forward(state)
         extent = [plot_range[0], plot_range[-1], plot_range[0], plot_range[-1]]
 
         fig, ax = plt.subplots(2, 2, sharex=True)
@@ -162,7 +164,7 @@ class MountainCar():
             test_hist.append([test_reward, test_steps])
 
             # check if solved
-            # if the mean of last n_solved teste episodes are
+            # if the mean of last n_solved test episodes are
             # greater than r_solved, it is solved!
 
             if epoch > n_solved:
@@ -184,6 +186,8 @@ class MountainCar():
                           ' to {:3d}'.format(test_running, epoch -
                                              n_solved + 1, epoch))
                     solved = epoch
+                # save the actor model for prediction task
+                    torch.save(self.agent.actor_local.model, 'build/actor_local.pth')
                     break
 
         if plot_Q:
@@ -194,7 +198,7 @@ class MountainCar():
         if verbose == 1:
             pstr = ('Epoch:{:4}\nTrain: reward:{: 6.1f} steps:{:6.0f} hist:'
                     '{: 6.1f} action/std:{: .3f}/{: .3f} \nTest:  reward:'
-                    '{: 6.1f} steps:{:6.0f} hist:{: 6.1f} action/std:{: .3f}'
+                    '{: 6.3f} steps:{:6.0f} hist:{: 6.1f} action/std:{: .3f}'
                     '/{: .3f}\n'.format(*vals))
         elif verbose == 0:
             pstr = ('Epoch {:4} train reward:{: 6.1f} test reward:{: 6.1f}'
